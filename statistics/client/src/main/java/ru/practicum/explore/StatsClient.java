@@ -10,8 +10,6 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -35,11 +33,9 @@ public class StatsClient {
 
     public ResponseEntity<Object> getHits(LocalDateTime start, LocalDateTime end,
                                           Boolean unique, List<String> uris) {
-        String encodedStart = encodeValue(start.toString());
-        String encodedEnd = encodeValue(end.toString());
         Map<String, Object> parameters = Map.of(
-                "start", encodedStart,
-                "end", encodedEnd,
+                "start", start,
+                "end", end,
                 "unique", unique,
                 "uris", uris
         );
@@ -49,17 +45,17 @@ public class StatsClient {
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders());
 
-        ResponseEntity<Object> shareitServerResponse;
+        ResponseEntity<Object> serverResponse;
         try {
             if (parameters != null) {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
+                serverResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
+                serverResponse = rest.exchange(path, method, requestEntity, Object.class);
             }
         } catch (HttpStatusCodeException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
-        return prepareGatewayResponse(shareitServerResponse);
+        return prepareGatewayResponse(serverResponse);
     }
 
     private HttpHeaders defaultHeaders() {
@@ -81,9 +77,5 @@ public class StatsClient {
         }
 
         return responseBuilder.build();
-    }
-
-    private String encodeValue(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }
