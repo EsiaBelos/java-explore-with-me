@@ -3,7 +3,8 @@ services:
   stats-server:
     ports:
       - "9090:9090"
-    depends_on: stats-db
+    depends_on:
+      - stats-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/explore_with_me
       - SPRING_DATASOURCE_USER=explore_with_me
