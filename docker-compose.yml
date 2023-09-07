@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   stats-server:
-    build: ./statistics
+    build: ./statistics/server
     image: statistics_image
     container_name: statistics_container
     ports:
@@ -26,7 +26,7 @@ services:
       - DB_PORT=5432
 
   ewm-service:
-    build: ./statistics
+    build: ./service
     image: service_image
     container_name: service_container
     ports:
