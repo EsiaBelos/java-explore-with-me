@@ -1,6 +1,7 @@
 package ru.practicum.explore;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -20,7 +21,7 @@ public class StatsClient {
     private static final RestTemplateBuilder builder = new RestTemplateBuilder();
 
     @Autowired
-    public StatsClient(String url) {
+    public StatsClient(@Value("${ewm-server.url}") String url) {
         this.rest = builder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(url))
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
@@ -34,10 +35,10 @@ public class StatsClient {
     public ResponseEntity<Object> getHits(LocalDateTime start, LocalDateTime end,
                                           Boolean unique, List<String> uris) {
         Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
+                "start", start.toString().replace("T", " "),
+                "end", end.toString().replace("T", " "),
                 "unique", unique,
-                "uris", uris
+                "uris", String.join(",", uris)
         );
         return makeAndSendRequest(HttpMethod.GET, "/stats", parameters, null);
     }
