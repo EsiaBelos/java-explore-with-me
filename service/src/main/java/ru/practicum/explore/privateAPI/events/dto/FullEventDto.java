@@ -1,10 +1,7 @@
 package ru.practicum.explore.privateAPI.events.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.explore.admin.categories.model.Category;
 import ru.practicum.explore.admin.users.dto.UserShortDto;
@@ -18,6 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 @Setter
+@NoArgsConstructor
 public class FullEventDto {
     private Long id;
     private String title;

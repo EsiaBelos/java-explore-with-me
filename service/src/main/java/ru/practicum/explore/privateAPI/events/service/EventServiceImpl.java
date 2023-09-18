@@ -1,16 +1,23 @@
 package ru.practicum.explore.privateAPI.events.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.explore.EndpointHitDto;
+import ru.practicum.explore.StatsClient;
+import ru.practicum.explore.ViewStats;
 import ru.practicum.explore.admin.categories.CatRepository;
 import ru.practicum.explore.admin.categories.model.Category;
-import ru.practicum.explore.exception.RequestNotFoundException;
 import ru.practicum.explore.admin.users.UserRepository;
 import ru.practicum.explore.admin.users.model.User;
 import ru.practicum.explore.exception.CategoryNotFoundException;
 import ru.practicum.explore.exception.EventNotFoundException;
+import ru.practicum.explore.exception.RequestNotFoundException;
 import ru.practicum.explore.exception.UserNotFoundException;
 import ru.practicum.explore.privateAPI.events.EventRepository;
 import ru.practicum.explore.privateAPI.events.LocationRepository;
@@ -25,11 +32,15 @@ import ru.practicum.explore.privateAPI.requests.mapper.RequestMapper;
 import ru.practicum.explore.privateAPI.requests.model.Request;
 import ru.practicum.explore.privateAPI.requests.model.RequestStatus;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +54,8 @@ public class EventServiceImpl implements EventService {
     private final RequestRepository requestRepository;
     private final EventMapper mapper;
     private final RequestMapper requestMapper;
+    private final StatsClient statsClient;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -120,6 +133,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<ShortEventDto> getEvents(Long userId, int from, int size) {
+
         return null;
     }
 
@@ -128,7 +142,14 @@ public class EventServiceImpl implements EventService {
         FullEventDto fullEventDto = mapper.toFullEventDto(checkEvent(eventId));
         List<Request> confirmedRequests = requestRepository.findAllByEventIdAndStatusOrderById(eventId, RequestStatus.CONFIRMED);
         fullEventDto.setConfirmedRequests(confirmedRequests.size());
-        //TODO подтянуть просмотры
+
+        LocalDateTime startDateTime = LocalDateTime.now().minusYears(5).truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        ResponseEntity<List<ViewStats>> response = statsClient.getHits(startDateTime,
+                endDateTime, true, List.of( "/events/" + eventId));
+        if (response.getBody() != null) {
+            fullEventDto.setViews(response.getBody().size());
+        }
         return fullEventDto;
     }
 
