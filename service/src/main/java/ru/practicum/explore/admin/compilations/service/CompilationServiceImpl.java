@@ -10,9 +10,9 @@ import ru.practicum.explore.admin.compilations.dto.UpdateCompilationRequest;
 import ru.practicum.explore.admin.compilations.mapper.CompilationMapper;
 import ru.practicum.explore.admin.compilations.model.Compilation;
 import ru.practicum.explore.exception.CompilationNotFoundException;
-import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.events.dto.ShortEventDto;
 import ru.practicum.explore.privateAPI.events.model.Event;
+import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.mapper.EventMapper;
 
 import java.util.ArrayList;

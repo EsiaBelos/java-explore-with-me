@@ -43,7 +43,7 @@ public class StatsClient {
     }
 
     public ResponseEntity<List<ViewStats>> getHits(LocalDateTime start, LocalDateTime end,
-                                          Boolean unique, List<String> uris) {
+                                                   Boolean unique, List<String> uris) {
         Map<String, Object> parameters = Map.of(
                 "start", start.toString().replace("T", " "),
                 "end", end.toString().replace("T", " "),
@@ -101,8 +101,9 @@ public class StatsClient {
         HttpEntity<T> requestEntity = new HttpEntity<>(defaultHeaders());
 
         ResponseEntity<List<ViewStats>> serverResponse;
-                log.info("Parameters: {}", parameters);
-                serverResponse = rest.exchange(path, method, requestEntity, new ParameterizedTypeReference<List<ViewStats>>() {}, parameters);
+        log.info("Parameters: {}", parameters);
+        serverResponse = rest.exchange(path, method, requestEntity, new ParameterizedTypeReference<List<ViewStats>>() {
+        }, parameters);
 
         return prepareGatewayResponseForGet(serverResponse);
     }

@@ -25,8 +25,8 @@ public class UserController {
 
     @GetMapping
     public List<User> getUsers(@RequestParam(defaultValue = "0") Integer from,
-                                     @RequestParam(defaultValue = "10") Integer size,
-                                     @RequestParam(required = false) List<Long> ids) {
+                               @RequestParam(defaultValue = "10") Integer size,
+                               @RequestParam(required = false) List<Long> ids) {
         return service.getUsers(from, size, ids);
     }
 

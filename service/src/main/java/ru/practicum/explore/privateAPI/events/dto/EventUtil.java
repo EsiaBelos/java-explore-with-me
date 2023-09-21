@@ -1,6 +1,5 @@
 package ru.practicum.explore.privateAPI.events.dto;
 
-import ru.practicum.explore.admin.events.dto.AdminStateAction;
 import ru.practicum.explore.admin.events.dto.UpdateEventAdminRequest;
 import ru.practicum.explore.privateAPI.events.model.Event;
 import ru.practicum.explore.privateAPI.events.model.State;

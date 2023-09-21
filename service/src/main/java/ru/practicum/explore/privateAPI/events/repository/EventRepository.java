@@ -3,8 +3,6 @@ package ru.practicum.explore.privateAPI.events.repository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import ru.practicum.explore.privateAPI.events.dto.ShortEventDto;
 import ru.practicum.explore.privateAPI.events.model.Event;
 
 import java.util.List;

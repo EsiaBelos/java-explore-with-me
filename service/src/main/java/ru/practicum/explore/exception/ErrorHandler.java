@@ -7,8 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.xml.bind.ValidationException;
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -16,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class ErrorHandler {
     @ExceptionHandler({UserNotFoundException.class, CategoryNotFoundException.class, EventNotFoundException.class,
-    RequestNotFoundException.class, CompilationNotFoundException.class})
+            RequestNotFoundException.class, CompilationNotFoundException.class})
     public ResponseEntity<ApiError> handleNotFound(final RuntimeException e) {
         log.debug(e.getMessage());
         return ResponseEntity
@@ -54,6 +52,7 @@ public class ErrorHandler {
                         .timestamp(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                         .build());
     }
+
     @ExceptionHandler
     public ResponseEntity<ApiError> handleDataIntegrityViolationException(final DataIntegrityViolationException e) {
         log.debug(e.getMessage());

@@ -16,6 +16,7 @@ import javax.validation.Valid;
 public class CompilationController {
 
     private final CompilationService service;
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@RequestBody @Valid NewCompilationDto dto) {

@@ -5,10 +5,5 @@ import ru.practicum.explore.StatsClient;
 @SpringBootTest
 @RequiredArgsConstructor
 public class StatsClientTest {
-    private final StatsClient client;
-
-
-
-
 
 }

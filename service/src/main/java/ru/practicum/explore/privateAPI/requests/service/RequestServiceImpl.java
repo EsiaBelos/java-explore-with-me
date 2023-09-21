@@ -4,14 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explore.exception.RequestNotFoundException;
 import ru.practicum.explore.admin.users.UserRepository;
 import ru.practicum.explore.admin.users.model.User;
 import ru.practicum.explore.exception.EventNotFoundException;
+import ru.practicum.explore.exception.RequestNotFoundException;
 import ru.practicum.explore.exception.UserNotFoundException;
-import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.events.model.Event;
 import ru.practicum.explore.privateAPI.events.model.State;
+import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.events.service.EventServiceImpl;
 import ru.practicum.explore.privateAPI.requests.RequestRepository;
 import ru.practicum.explore.privateAPI.requests.dto.ParticipationRequestDto;
@@ -47,8 +47,8 @@ public class RequestServiceImpl implements RequestService {
                 new UserNotFoundException(String.format("User not found %d", userId)));
         RequestStatus status;
         if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
-             status = RequestStatus.CONFIRMED;
-             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+            status = RequestStatus.CONFIRMED;
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         } else {
             status = RequestStatus.PENDING;
         }

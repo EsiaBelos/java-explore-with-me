@@ -31,7 +31,7 @@ public class EventController {
 
     @PatchMapping("/{eventId}/requests") //only PENDING
     public EventRequestStatusUpdateResult updateEventRequest(@PathVariable Long userId, @PathVariable Long eventId,
-                                    @RequestBody EventRequestStatusUpdateDto dto) {
+                                                             @RequestBody EventRequestStatusUpdateDto dto) {
         return service.updateEventRequest(userId, eventId, dto);
     }
 

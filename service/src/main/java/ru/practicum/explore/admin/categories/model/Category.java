@@ -1,7 +1,6 @@
 package ru.practicum.explore.admin.categories.model;
 
 import lombok.*;
-import ru.practicum.explore.admin.users.model.User;
 
 import javax.persistence.*;
 
