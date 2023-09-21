@@ -12,7 +12,6 @@ import ru.practicum.explore.exception.UserNotFoundException;
 import ru.practicum.explore.privateAPI.events.model.Event;
 import ru.practicum.explore.privateAPI.events.model.State;
 import ru.practicum.explore.privateAPI.events.repository.EventRepository;
-import ru.practicum.explore.privateAPI.events.service.EventServiceImpl;
 import ru.practicum.explore.privateAPI.requests.RequestRepository;
 import ru.practicum.explore.privateAPI.requests.dto.ParticipationRequestDto;
 import ru.practicum.explore.privateAPI.requests.mapper.RequestMapper;
@@ -33,7 +32,6 @@ public class RequestServiceImpl implements RequestService {
     private final RequestMapper mapper;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final EventServiceImpl eventService;
 
     @Override
     @Transactional
@@ -64,6 +62,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         Request request = requestRepository.findById(requestId).orElseThrow(() ->
                 new RequestNotFoundException(String.format("Request not found %d", requestId)));
@@ -73,6 +72,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long userId) {
         List<Request> requests = requestRepository.findAllByRequesterId(userId);
         return requests.stream()

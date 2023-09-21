@@ -180,7 +180,7 @@ public class EventServiceImpl implements EventService {
         ResponseEntity<List<ViewStats>> response = statsClient.getHits(
                 startDateTime,
                 endDateTime,
-                false,
+                true,
                 List.of("/events/" + eventId));
         if (response.getBody() != null && response.getBody().size() != 0) {
             Long hits = response.getBody().get(0).getHits();

@@ -3,6 +3,7 @@ package ru.practicum.explore.admin.compilations.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.admin.compilations.CompilationRepository;
 import ru.practicum.explore.admin.compilations.dto.CompilationDto;
 import ru.practicum.explore.admin.compilations.dto.NewCompilationDto;
@@ -30,6 +31,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventMapper eventMapper;
 
     @Override
+    @Transactional
     public CompilationDto createCompilation(NewCompilationDto dto) {
         Compilation compilation = compilationMapper.toCompilation(dto);
         if (dto.getEvents() != null) {
@@ -48,6 +50,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest dto) {
         Compilation compilation = compilationRepository.findById(compId).orElseThrow(() ->
                 new CompilationNotFoundException(String.format("Compilation not found %d", compId)));
@@ -72,6 +75,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional
     public void deleteCompilation(Long compId) {
         Compilation compilation = compilationRepository.findById(compId).orElseThrow(() ->
                 new CompilationNotFoundException(String.format("Compilation not found %d", compId)));

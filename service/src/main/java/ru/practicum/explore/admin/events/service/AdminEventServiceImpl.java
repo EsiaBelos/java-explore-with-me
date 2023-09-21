@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.admin.categories.CatRepository;
 import ru.practicum.explore.admin.categories.model.Category;
 import ru.practicum.explore.admin.events.dto.AdminStateAction;
@@ -41,6 +42,7 @@ public class AdminEventServiceImpl implements AdminEventService {
     private final EventMapper mapper;
 
     @Override
+    @Transactional
     public FullEventDto updateEvent(Long eventId, UpdateEventAdminRequest dto) {
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
                 new EventNotFoundException(String.format("Event not found %d", eventId)));
@@ -71,6 +73,7 @@ public class AdminEventServiceImpl implements AdminEventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FullEventDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
                                         LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
         if (rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {

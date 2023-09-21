@@ -105,7 +105,6 @@ public class PublicServiceImpl implements PublicService {
     }
 
     @Override
-    @Transactional
     public FullEventDto getEventById(Long id, HttpServletRequest request) {
         saveStats(request);
         Event event = eventRepository.findById(id).orElseThrow(() ->
@@ -118,7 +117,7 @@ public class PublicServiceImpl implements PublicService {
         LocalDateTime startDateTime = LocalDateTime.now().minusYears(5).truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         ResponseEntity<List<ViewStats>> response = statsClient.getHits(startDateTime,
-                endDateTime, false, List.of("/events/" + id));
+                endDateTime, true, List.of("/events/" + id));
         if (response.getBody() != null && response.getBody().size() != 0) {
             Long hits = response.getBody().get(0).getHits();
             event.setViews(hits);
