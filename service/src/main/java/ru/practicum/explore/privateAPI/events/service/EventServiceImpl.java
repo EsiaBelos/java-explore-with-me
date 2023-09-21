@@ -1,14 +1,13 @@
 package ru.practicum.explore.privateAPI.events.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explore.EndpointHitDto;
 import ru.practicum.explore.StatsClient;
 import ru.practicum.explore.ViewStats;
 import ru.practicum.explore.admin.categories.CatRepository;
@@ -19,12 +18,12 @@ import ru.practicum.explore.exception.CategoryNotFoundException;
 import ru.practicum.explore.exception.EventNotFoundException;
 import ru.practicum.explore.exception.RequestNotFoundException;
 import ru.practicum.explore.exception.UserNotFoundException;
-import ru.practicum.explore.privateAPI.events.EventRepository;
 import ru.practicum.explore.privateAPI.events.LocationRepository;
 import ru.practicum.explore.privateAPI.events.dto.*;
 import ru.practicum.explore.privateAPI.events.model.Event;
 import ru.practicum.explore.privateAPI.events.model.Location;
 import ru.practicum.explore.privateAPI.events.model.State;
+import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.mapper.EventMapper;
 import ru.practicum.explore.privateAPI.requests.RequestRepository;
 import ru.practicum.explore.privateAPI.requests.dto.ParticipationRequestDto;
@@ -32,15 +31,11 @@ import ru.practicum.explore.privateAPI.requests.mapper.RequestMapper;
 import ru.practicum.explore.privateAPI.requests.model.Request;
 import ru.practicum.explore.privateAPI.requests.model.RequestStatus;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +50,6 @@ public class EventServiceImpl implements EventService {
     private final EventMapper mapper;
     private final RequestMapper requestMapper;
     private final StatsClient statsClient;
-    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -65,6 +59,8 @@ public class EventServiceImpl implements EventService {
         Location savedLocation = locationRepository.save(dto.getLocation());
         Event event = mapper.toEvent(dto, LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS), State.PENDING,
                 user, category, savedLocation);
+        event.setViews(0L);
+        event.setConfirmedRequests(0);
         Event savedEvent = eventRepository.save(event);
         return mapper.toFullEventDto(savedEvent);
     }
@@ -76,7 +72,11 @@ public class EventServiceImpl implements EventService {
         if (event.getState().equals(State.PUBLISHED)) {
             throw new IllegalArgumentException("Published events cannot be changed");
         }
-        Event updatedEvent = EventUtil.test(event, dto);
+        State state = null;
+        if (dto.getStateAction() != null) {
+            state = dto.getStateAction().equals(StateAction.CANCEL_REVIEW) ? State.CANCELED : State.PENDING;
+        }
+        Event updatedEvent = EventUtil.test(event, dto, state);
         if (dto.getCategory() != null && !event.getCategory().getId().equals(dto.getCategory())) {
             Category category = checkCategory(dto.getCategory());
             updatedEvent.setCategory(category);
@@ -85,18 +85,17 @@ public class EventServiceImpl implements EventService {
             Location location = locationRepository.save(dto.getLocation());
             updatedEvent.setLocation(location);
         }
+        updateEventViewsAndConfirmedRequests(event, eventId);
         Event savedEvent = eventRepository.save(updatedEvent);
         return mapper.toFullEventDto(savedEvent);
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResult updateEventRequest(Long userId, Long eventId, EventRequestStatusUpdateDto dto) {
-        FullEventDto event = getEventById(userId, eventId);
+        Event event = checkEvent(eventId);
+        updateEventViewsAndConfirmedRequests(event, eventId);
         List<Request> requests = requestRepository.findAllByIdIn(dto.getRequestIds());
-        long availableToParticipate = event.getParticipantLimit() - event.getConfirmedRequests(); //кол мест для участия
-        if (availableToParticipate == 0) {
-            throw new IllegalArgumentException(String.format("Participant limit is reached for event %d", eventId));
-        }
         if (!requests.isEmpty()) {
             List<Request> pendingRequests = getPendingRequests(requests);
             List<Request> confirmedRequests = new ArrayList<>();
@@ -106,6 +105,10 @@ public class EventServiceImpl implements EventService {
             if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) { //если для события лимит заявок равен 0 или отключена пре-модерация заявок
                 confirmedRequests.addAll(confirmRequests(pendingRequests));
                 savedConfirmedRequests.addAll(getSavedRequests(confirmedRequests));
+            }
+            long availableToParticipate = event.getParticipantLimit() - event.getConfirmedRequests(); //кол мест для участия
+            if (availableToParticipate == 0) {
+                throw new IllegalArgumentException(String.format("Participant limit is reached for event %d", eventId));
             }
             switch (dto.getStatus()) {
                 case REJECTED:
@@ -125,35 +128,35 @@ public class EventServiceImpl implements EventService {
                         rejectedRequests.addAll(rejectRequests(rejectRequests(pendingRequests)));
                         savedRejectedRequests.addAll(getSavedRequests(rejectedRequests));
                     }
-                }
+            }
+            event.setConfirmedRequests(event.getConfirmedRequests() + confirmedRequests.size());
+            eventRepository.save(event);
             return new EventRequestStatusUpdateResult(savedConfirmedRequests, savedRejectedRequests);
         }
         throw new RequestNotFoundException(String.format("Requests not found for event %d", eventId));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ShortEventDto> getEvents(Long userId, int from, int size) {
-
-        return null;
+        Pageable sortedById = PageRequest.of(from, size, Sort.by("id"));
+        List<Event> events = eventRepository.findAllByInitiatorId(userId, sortedById);
+        return events.stream()
+                .map(mapper::toShortEventDto)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public FullEventDto getEventById(Long userId, Long eventId) {
-        FullEventDto fullEventDto = mapper.toFullEventDto(checkEvent(eventId));
-        List<Request> confirmedRequests = requestRepository.findAllByEventIdAndStatusOrderById(eventId, RequestStatus.CONFIRMED);
-        fullEventDto.setConfirmedRequests(confirmedRequests.size());
-
-        LocalDateTime startDateTime = LocalDateTime.now().minusYears(5).truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        ResponseEntity<List<ViewStats>> response = statsClient.getHits(startDateTime,
-                endDateTime, true, List.of( "/events/" + eventId));
-        if (response.getBody() != null) {
-            fullEventDto.setViews(response.getBody().size());
-        }
-        return fullEventDto;
+        Event event = checkEvent(eventId);
+        updateEventViewsAndConfirmedRequests(event, eventId);
+        eventRepository.save(event);
+        return mapper.toFullEventDto(event);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long userId, Long eventId) {
         return requestRepository.findAllByEventId(eventId);
     }
@@ -168,6 +171,23 @@ public class EventServiceImpl implements EventService {
         return pendingRequests;
     }
 
+    public void updateEventViewsAndConfirmedRequests(Event event, Long eventId) {
+        List<Request> confirmedRequests = requestRepository.findAllByEventIdAndStatusOrderById(eventId, RequestStatus.CONFIRMED);
+        event.setConfirmedRequests(confirmedRequests.size());
+        LocalDateTime startDateTime = LocalDateTime.now().minusYears(5).truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+
+        ResponseEntity<List<ViewStats>> response = statsClient.getHits(
+                startDateTime,
+                endDateTime,
+                false,
+                List.of("/events/" + eventId));
+        if (response.getBody() != null && response.getBody().size() != 0) {
+            Long hits = response.getBody().get(0).getHits();
+            event.setViews(hits);
+        }
+    }
+
     private List<Request> confirmRequests(List<Request> pendingRequests) {
         return pendingRequests.stream()
                 .peek(request -> request.setStatus(RequestStatus.CONFIRMED))
@@ -180,8 +200,10 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
-    private List<ParticipationRequestDto> getSavedRequests(List<Request> updatedRequests) {
-        return requestRepository.saveAll(updatedRequests).stream()
+    @Transactional
+    public List<ParticipationRequestDto> getSavedRequests(List<Request> updatedRequests) {
+        List<Request> saved = requestRepository.saveAll(updatedRequests);
+        return saved.stream()
                 .map(requestMapper::toDto)
                 .collect(Collectors.toList());
     }

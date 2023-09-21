@@ -13,6 +13,7 @@ import java.util.List;
 public interface CompilationMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "events", ignore = true)
     Compilation toCompilation(NewCompilationDto dto);
 
     @Mapping(target = "events", source = "events")

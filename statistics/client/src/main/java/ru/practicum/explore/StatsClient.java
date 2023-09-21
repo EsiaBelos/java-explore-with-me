@@ -23,6 +23,7 @@ import java.util.Map;
 public class StatsClient {
     protected final RestTemplate rest;
     private static final RestTemplateBuilder builder = new RestTemplateBuilder();
+    private final String serverUrl = "http://localhost:9090";
 
     @Autowired
     public StatsClient(@Value("${ewm-server.url}") String url) {
@@ -32,8 +33,13 @@ public class StatsClient {
                 .build();
     }
 
-    public ResponseEntity<Object> saveHit(EndpointHitDto dto) {
-        return makeAndSendRequest(HttpMethod.POST, "/hit", null, dto);
+    public void saveHit(EndpointHitDto dto) {
+        HttpEntity<EndpointHitDto> requestEntity = new HttpEntity<>(dto, defaultHeaders());
+        rest.exchange(serverUrl + "/hit",
+                HttpMethod.POST,
+                requestEntity,
+                Object.class);
+
     }
 
     public ResponseEntity<List<ViewStats>> getHits(LocalDateTime start, LocalDateTime end,
@@ -60,7 +66,6 @@ public class StatsClient {
         ResponseEntity<Object> serverResponse;
         try {
             if (parameters != null) {
-                log.info("Parameters: {}", parameters);
                 serverResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
                 serverResponse = rest.exchange(path, method, requestEntity, Object.class);

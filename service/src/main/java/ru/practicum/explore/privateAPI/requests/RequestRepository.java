@@ -8,9 +8,9 @@ import ru.practicum.explore.privateAPI.requests.model.RequestStatus;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface RequestRepository extends JpaRepository<Request, Long> {
-    Optional<Request> findByEventIdAndRequesterId(Long userId, Long eventId);
 
     List<Request> findAllByRequesterId(Long userId);
 
@@ -24,4 +24,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             "where r.event.id = :eventId " +
             "order by r.id")
     List<ParticipationRequestDto> findAllByEventId(Long eventId);
+
+    List<Request> findAllByEventIdInAndStatusOrderById(Set<Long> longs, RequestStatus requestStatus);
 }

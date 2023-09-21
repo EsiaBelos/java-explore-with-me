@@ -1,6 +1,7 @@
 package ru.practicum.explore.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.EndpointHitDto;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ServerServiceImpl implements ServerService {
 
     private final StatsRepository repository;
@@ -23,7 +25,9 @@ public class ServerServiceImpl implements ServerService {
     @Transactional
     public EndpointHit saveHit(EndpointHitDto dto) {
         EndpointHit hit = mapper.toEndpointHit(dto);
-        return repository.save(hit);
+        EndpointHit endpointHit = repository.save(hit);
+        log.info("Hit saved {}", endpointHit.getUri());
+        return endpointHit;
     }
 
     @Override

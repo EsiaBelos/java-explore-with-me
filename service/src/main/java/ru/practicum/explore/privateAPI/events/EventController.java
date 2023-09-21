@@ -25,7 +25,7 @@ public class EventController {
 
     @PatchMapping("/{eventId}") //only PENDING or CANCELED
     public FullEventDto updateEvent(@PathVariable Long userId, @PathVariable Long eventId,
-                                    @RequestBody UpdateEventUserRequest dto) {
+                                    @RequestBody @Valid UpdateEventUserRequest dto) {
         return service.updateEvent(userId, eventId, dto);
     }
 

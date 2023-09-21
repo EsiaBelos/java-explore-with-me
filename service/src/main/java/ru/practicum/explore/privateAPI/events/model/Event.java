@@ -44,6 +44,9 @@ public class Event {
 
     @Column(name = "participant_limit")
     private Integer participantLimit; //Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
+    private Long views;
+    @Column(name = "confirmed_requests")
+    private Integer confirmedRequests;
 
     @ManyToOne
     @JoinColumn(name = "initiator_id")

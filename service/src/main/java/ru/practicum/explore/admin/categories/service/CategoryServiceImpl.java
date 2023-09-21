@@ -9,8 +9,8 @@ import ru.practicum.explore.admin.categories.mapper.CategoryMapper;
 import ru.practicum.explore.admin.categories.model.Category;
 import ru.practicum.explore.exception.CategoryNotFoundException;
 import ru.practicum.explore.exception.InvalidCategoryForDeleteException;
-import ru.practicum.explore.privateAPI.events.EventRepository;
 import ru.practicum.explore.privateAPI.events.model.Event;
+import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 
 import java.util.List;
 
@@ -25,9 +25,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category addCategory(CategoryDto dto) {
-        Category category = repository.save(mapper.toCategory(dto));
+        Category category = mapper.toCategory(dto);
+        Category saved = repository.save(category);
         log.debug("Category saved {}", category.getId());
-        return category;
+        return saved;
     }
 
     @Override
@@ -50,7 +51,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private Category checkCategory(long catId) {
         Category category = repository.findById(catId).orElseThrow(() ->
-        new CategoryNotFoundException(String.format("Категория не найдена %d", catId)));
+                new CategoryNotFoundException(String.format("Категория не найдена %d", catId)));
         return category;
     }
 }

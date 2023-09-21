@@ -7,11 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explore.exception.UserNotFoundException;
 import ru.practicum.explore.admin.users.UserRepository;
 import ru.practicum.explore.admin.users.dto.UserDto;
 import ru.practicum.explore.admin.users.mapper.UserMapper;
 import ru.practicum.explore.admin.users.model.User;
+import ru.practicum.explore.exception.UserNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +27,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User addUser(UserDto dto) {
-        User user = repository.save(mapper.toUser(dto));
-        log.debug("User saved {}", user.getId());
-        return user;
+        User user = mapper.toUser(dto);
+        User saved = repository.save(user);
+        log.debug("User saved {}", saved.getId());
+        return saved;
     }
 
     @Override

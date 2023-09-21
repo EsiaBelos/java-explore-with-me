@@ -40,10 +40,10 @@ public class NewEventDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate; //дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента
 
-    private Boolean paid; //Нужно ли оплачивать участие
-    private Boolean requestModeration; //Нужна ли пре-модерация заявок на участие
+    private Boolean paid = false; //Нужно ли оплачивать участие
+    private Boolean requestModeration = true; //Нужна ли пре-модерация заявок на участие
 
-    private Integer participantLimit;
+    private Integer participantLimit = 0;
     @NotNull
     private Location location;
     @NotNull

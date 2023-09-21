@@ -15,7 +15,7 @@ public class EventUtil {
         }
     }
 
-    public static Event test(Event event, UpdateEventUserRequest dto) {
+    public static Event test(Event event, UpdateEventUserRequest dto, State state) {
         setIfNonNull(event::setTitle, dto.getTitle());
         setIfNonNull(event::setAnnotation, dto.getAnnotation());
         setIfNonNull(event::setDescription, dto.getDescription());
@@ -23,12 +23,11 @@ public class EventUtil {
         setIfNonNull(event::setPaid, dto.getPaid());
         setIfNonNull(event::setRequestModeration, dto.getRequestModeration());
         setIfNonNull(event::setParticipantLimit, dto.getParticipantLimit());
-        setIfNonNull(event::setState,
-                dto.getStateAction().equals(StateAction.CANCEL_REVIEW) ? State.CANCELED : State.PENDING);
+        setIfNonNull(event::setState, state);
         return event;
     }
 
-    public static Event testForAdmin(Event event, UpdateEventAdminRequest dto) {
+    public static Event testForAdmin(Event event, UpdateEventAdminRequest dto, State state) {
         setIfNonNull(event::setTitle, dto.getTitle());
         setIfNonNull(event::setAnnotation, dto.getAnnotation());
         setIfNonNull(event::setDescription, dto.getDescription());
@@ -36,9 +35,7 @@ public class EventUtil {
         setIfNonNull(event::setPaid, dto.getPaid());
         setIfNonNull(event::setRequestModeration, dto.getRequestModeration());
         setIfNonNull(event::setParticipantLimit, dto.getParticipantLimit());
-        setIfNonNull(event::setState,
-                dto.getStateAction().equals(
-                        AdminStateAction.REJECT_EVENT) ? State.CANCELED : State.PUBLISHED);
+        setIfNonNull(event::setState, state);
         return event;
     }
 }

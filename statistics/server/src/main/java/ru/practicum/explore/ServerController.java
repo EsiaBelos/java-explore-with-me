@@ -20,10 +20,9 @@ public class ServerController {
     private final ServerService service;
 
     @PostMapping(value = "/hit")
-    public ResponseEntity<String> saveHit(@RequestBody @Valid EndpointHitDto dto) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public void saveHit(@RequestBody @Valid EndpointHitDto dto) {
         service.saveHit(dto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Информация сохранена");
     }
 
     @GetMapping(value = "/stats")

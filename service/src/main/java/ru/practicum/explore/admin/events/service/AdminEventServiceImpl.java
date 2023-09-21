@@ -2,23 +2,37 @@ package ru.practicum.explore.admin.events.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.explore.admin.categories.CatRepository;
 import ru.practicum.explore.admin.categories.model.Category;
+import ru.practicum.explore.admin.events.dto.AdminStateAction;
 import ru.practicum.explore.admin.events.dto.UpdateEventAdminRequest;
 import ru.practicum.explore.exception.CategoryNotFoundException;
 import ru.practicum.explore.exception.EventNotFoundException;
-import ru.practicum.explore.privateAPI.events.EventRepository;
+import ru.practicum.explore.exception.InvalidEventDateException;
+import ru.practicum.explore.privateAPI.events.dto.StateAction;
+import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.events.LocationRepository;
 import ru.practicum.explore.privateAPI.events.dto.EventUtil;
 import ru.practicum.explore.privateAPI.events.dto.FullEventDto;
 import ru.practicum.explore.privateAPI.events.model.Event;
 import ru.practicum.explore.privateAPI.events.model.Location;
 import ru.practicum.explore.privateAPI.events.model.State;
+import ru.practicum.explore.privateAPI.events.repository.EventSpecification;
 import ru.practicum.explore.privateAPI.mapper.EventMapper;
 
+import javax.xml.bind.DataBindingException;
+import javax.xml.bind.ValidationException;
+import java.security.InvalidParameterException;
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +52,16 @@ public class AdminEventServiceImpl implements AdminEventService {
             throw new IllegalArgumentException("Only PENDING events can be updated by admin");
         }
         if (!isDateValid(event, dto)) {
-            throw new IllegalArgumentException("Event Date is not valid for publication");
+            throw new InvalidEventDateException("Event Date is not valid for publication");
         }
-        Event updatedEvent = EventUtil.testForAdmin(event, dto);
+        State state = null;
+        if (dto.getStateAction() != null) {
+            state = dto.getStateAction().equals(AdminStateAction.REJECT_EVENT) ? State.CANCELED : State.PUBLISHED;
+        }
+        Event updatedEvent = EventUtil.testForAdmin(event, dto, state);
+        if (updatedEvent.getState().equals(State.PUBLISHED)) {
+            updatedEvent.setPublishedOn(LocalDateTime.now());
+        }
         if (dto.getCategory() != null && !event.getCategory().getId().equals(dto.getCategory())) {
             Category category = checkCategory(dto.getCategory());
             updatedEvent.setCategory(category);
@@ -54,8 +75,20 @@ public class AdminEventServiceImpl implements AdminEventService {
     }
 
     @Override
-    public List<FullEventDto> getEvents(List<Long> users, List<State> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
-        return null;
+    public List<FullEventDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
+                                        LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
+        if (rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
+            throw new InvalidParameterException("Date range is invalid");
+        }
+        Pageable pageable = PageRequest.of(from, size, Sort.by("id"));
+        Specification<Event> specs = EventSpecification.filterForAdmin(users, states, categories, rangeStart, rangeEnd);
+        List<Event> events = eventRepository.findAll(specs, pageable).getContent();
+        if (!events.isEmpty()) {
+            return events.stream()
+                    .map(mapper::toFullEventDto)
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
     private Boolean isDateValid(Event event, UpdateEventAdminRequest dto) {
