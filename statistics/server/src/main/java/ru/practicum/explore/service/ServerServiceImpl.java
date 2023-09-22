@@ -26,13 +26,14 @@ public class ServerServiceImpl implements ServerService {
     public EndpointHit saveHit(EndpointHitDto dto) {
         EndpointHit hit = mapper.toEndpointHit(dto);
         EndpointHit endpointHit = repository.save(hit);
-        log.info("Hit saved {}", endpointHit.getUri());
+        log.info("Hit saved {}, {}", endpointHit.getUri(), endpointHit.getIp());
         return endpointHit;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ViewStats> getHits(LocalDateTime start, LocalDateTime end, Boolean unique, List<String> uris) {
+        log.info("Prepare list for uris {}", uris);
         if (uris != null) {
             if (!unique) {
                 return repository.findAllByUrisAndNotUniqueIp(uris, start, end);

@@ -1,6 +1,7 @@
 package ru.practicum.explore;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class ServerController {
 
     private final ServerService service;
@@ -29,6 +31,8 @@ public class ServerController {
                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                    @RequestParam(defaultValue = "false") Boolean unique,
                                    @RequestParam(required = false) List<String> uris) {
-        return service.getHits(start, end, unique, uris);
+        List<ViewStats> views = service.getHits(start, end, unique, uris);
+        log.info("List received by controller {}", views != null);
+        return views;
     }
 }

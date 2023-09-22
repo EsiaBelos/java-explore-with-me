@@ -174,8 +174,8 @@ public class EventServiceImpl implements EventService {
     public void updateEventViewsAndConfirmedRequests(Event event, Long eventId) {
         List<Request> confirmedRequests = requestRepository.findAllByEventIdAndStatusOrderById(eventId, RequestStatus.CONFIRMED);
         event.setConfirmedRequests(confirmedRequests.size());
-        LocalDateTime startDateTime = LocalDateTime.now().minusYears(5).truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime startDateTime = LocalDateTime.now().minusYears(100).truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endDateTime = LocalDateTime.now().plusHours(5).truncatedTo(ChronoUnit.SECONDS);
 
         ResponseEntity<List<ViewStats>> response = statsClient.getHits(
                 startDateTime,

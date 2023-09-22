@@ -59,35 +59,21 @@ public class StatsClient {
         return makeAndSendRequestForGet(HttpMethod.GET, urlTemplate, parameters);
     }
 
-    private HttpHeaders defaultHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        return headers;
-    }
-
     private <T> ResponseEntity<List<ViewStats>> makeAndSendRequestForGet(HttpMethod method, String path, Map<String, Object> parameters) {
         HttpEntity<T> requestEntity = new HttpEntity<>(defaultHeaders());
 
         ResponseEntity<List<ViewStats>> serverResponse;
         log.info("Parameters: {}", parameters);
-        serverResponse = rest.exchange(path, method, requestEntity, new ParameterizedTypeReference<List<ViewStats>>() {
+        serverResponse = rest.exchange(path, method, requestEntity, new ParameterizedTypeReference<>() {
         }, parameters);
-
-        return prepareGatewayResponseForGet(serverResponse);
+        log.info("Response contains body {}", serverResponse.getBody() != null);
+        return serverResponse;
     }
 
-    private static ResponseEntity<List<ViewStats>> prepareGatewayResponseForGet(ResponseEntity<List<ViewStats>> response) {
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
-
-        ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.status(response.getStatusCode());
-
-        if (response.hasBody()) {
-            return responseBuilder.body(response.getBody());
-        }
-
-        return responseBuilder.build();
+    private HttpHeaders defaultHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        return headers;
     }
 }

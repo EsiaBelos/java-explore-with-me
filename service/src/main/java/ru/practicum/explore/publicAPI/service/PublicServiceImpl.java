@@ -114,8 +114,8 @@ public class PublicServiceImpl implements PublicService {
         }
         List<Request> confirmedRequests = requestRepository.findAllByEventIdAndStatusOrderById(id, RequestStatus.CONFIRMED);
         event.setConfirmedRequests(confirmedRequests.size());
-        LocalDateTime startDateTime = LocalDateTime.now().minusYears(5).truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime startDateTime = LocalDateTime.now().minusYears(100).truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endDateTime = LocalDateTime.now().plusHours(5).truncatedTo(ChronoUnit.SECONDS);
         ResponseEntity<List<ViewStats>> response = statsClient.getHits(startDateTime,
                 endDateTime, true, List.of("/events/" + id));
         if (response.getBody() != null && response.getBody().size() != 0) {
