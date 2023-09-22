@@ -33,6 +33,9 @@ public class ServerServiceImpl implements ServerService {
     @Override
     @Transactional(readOnly = true)
     public List<ViewStats> getHits(LocalDateTime start, LocalDateTime end, Boolean unique, List<String> uris) {
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Invalid date range");
+        }
         log.info("Prepare list for uris {}", uris);
         if (uris != null) {
             if (!unique) {
