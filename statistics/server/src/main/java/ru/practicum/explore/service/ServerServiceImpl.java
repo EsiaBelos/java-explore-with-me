@@ -16,6 +16,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ServerServiceImpl implements ServerService {
 
     private final StatsRepository repository;
@@ -31,7 +32,6 @@ public class ServerServiceImpl implements ServerService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ViewStats> getHits(LocalDateTime start, LocalDateTime end, Boolean unique, List<String> uris) {
         if (start.isAfter(end)) {
             throw new IllegalArgumentException("Invalid date range");

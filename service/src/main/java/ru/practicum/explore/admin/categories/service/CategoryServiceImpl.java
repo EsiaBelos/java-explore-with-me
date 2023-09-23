@@ -18,6 +18,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class CategoryServiceImpl implements CategoryService {
 
     private final CatRepository repository;
@@ -25,7 +26,6 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper mapper;
 
     @Override
-    @Transactional
     public Category addCategory(CategoryDto dto) {
         Category category = mapper.toCategory(dto);
         Category saved = repository.save(category);
@@ -34,7 +34,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
     public Category updateCategory(long catId, CategoryDto dto) {
         Category category = checkCategory(catId);
         category.setName(dto.getName());
@@ -42,7 +41,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
     public void deleteCategory(long catId) {
         checkCategory(catId);
         List<Event> events = eventRepository.findAllByCategoryId(catId);

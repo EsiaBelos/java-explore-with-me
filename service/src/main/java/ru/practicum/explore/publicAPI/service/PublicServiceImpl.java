@@ -21,7 +21,6 @@ import ru.practicum.explore.admin.compilations.model.Compilation;
 import ru.practicum.explore.exception.CategoryNotFoundException;
 import ru.practicum.explore.exception.CompilationNotFoundException;
 import ru.practicum.explore.exception.EventNotFoundException;
-import ru.practicum.explore.exception.InvalidDateRangeException;
 import ru.practicum.explore.privateAPI.events.dto.FullEventDto;
 import ru.practicum.explore.privateAPI.events.dto.ShortEventDto;
 import ru.practicum.explore.privateAPI.events.model.Event;
@@ -32,6 +31,7 @@ import ru.practicum.explore.privateAPI.mapper.EventMapper;
 import ru.practicum.explore.privateAPI.requests.RequestRepository;
 import ru.practicum.explore.privateAPI.requests.model.Request;
 import ru.practicum.explore.privateAPI.requests.model.RequestStatus;
+import ru.practicum.explore.publicAPI.dto.SearchEventParams;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class PublicServiceImpl implements PublicService {
 
     private final CatRepository catRepository;
@@ -54,10 +55,8 @@ public class PublicServiceImpl implements PublicService {
     private final EventMapper eventMapper;
     private final StatsClient statsClient;
     private final RequestRepository requestRepository;
-    private final String artifact = "explore-with-me-service";
 
     @Override
-    @Transactional(readOnly = true)
     public CompilationDto getCompById(Long compId) {
         Compilation compilation = compilationRepository.findById(compId).orElseThrow(() ->
                 new CompilationNotFoundException(String.format("Compilation not found %d", compId)));
@@ -71,7 +70,6 @@ public class PublicServiceImpl implements PublicService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
         Pageable sortedById = PageRequest.of(from, size, Sort.by("id"));
         List<Compilation> compilations = new ArrayList<>();
@@ -91,20 +89,19 @@ public class PublicServiceImpl implements PublicService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Category getCatById(Long catId) {
         return catRepository.findById(catId).orElseThrow(() ->
                 new CategoryNotFoundException(String.format("Category not found %d", catId)));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Category> getCategories(int from, int size) {
         Pageable sortedById = PageRequest.of(from, size, Sort.by("id"));
         return catRepository.findAll(sortedById).getContent();
     }
 
     @Override
+    @Transactional
     public FullEventDto getEventById(Long id, HttpServletRequest request) {
         saveStats(request);
         Event event = eventRepository.findById(id).orElseThrow(() ->
@@ -127,17 +124,13 @@ public class PublicServiceImpl implements PublicService {
     }
 
     @Override
-    public List<ShortEventDto> getEvents(String text, List<Long> categories, Boolean paid,
-                                         LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
-                                         ru.practicum.explore.Sort sort, Integer from, Integer size,
+    @Transactional
+    public List<ShortEventDto> getEvents(SearchEventParams params, Integer from, Integer size,
                                          HttpServletRequest httpServletRequest) {
         saveStats(httpServletRequest);
-        if (rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
-            throw new InvalidDateRangeException("Date range is invalid");
-        }
         Pageable pageable = PageRequest.of(from, size, Sort.by("id"));
-        if (sort != null) {
-            switch (sort) {
+        if (params.getSort() != null) {
+            switch (params.getSort()) {
                 case EVENT_DATE:
                     pageable = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "eventDate"));
                     break;
@@ -146,11 +139,11 @@ public class PublicServiceImpl implements PublicService {
                     break;
             }
         }
-        Specification<Event> specs = EventSpecification.filterForPublic(text, categories, paid, rangeStart, rangeEnd, State.PUBLISHED);
+        Specification<Event> specs = EventSpecification.filterForPublic(params, State.PUBLISHED);
         List<Event> events = eventRepository.findAll(specs, pageable).getContent();
         if (!events.isEmpty()) {
             saveStatsForList(httpServletRequest, events.stream().map(Event::getId).collect(Collectors.toSet()));
-            if (onlyAvailable != null && onlyAvailable) {
+            if (params.getOnlyAvailable() != null && params.getOnlyAvailable()) {
                 return events.stream()
                         .map(eventMapper::toShortEventDto)
                         .filter(event -> event.getConfirmedRequests() < event.getParticipantLimit())
@@ -177,6 +170,7 @@ public class PublicServiceImpl implements PublicService {
     }
 
     private EndpointHitDto createEndpointHitDto(String ip, String uri, LocalDateTime timestamp) {
+        String artifact = "explore-with-me-service";
         return EndpointHitDto.builder()
                 .ip(ip)
                 .uri(uri)

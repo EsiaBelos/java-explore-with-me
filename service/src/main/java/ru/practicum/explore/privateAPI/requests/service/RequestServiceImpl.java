@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
@@ -72,7 +73,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long userId) {
         List<Request> requests = requestRepository.findAllByRequesterId(userId);
         return requests.stream()

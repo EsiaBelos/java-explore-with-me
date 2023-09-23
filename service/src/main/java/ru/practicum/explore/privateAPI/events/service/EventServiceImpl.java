@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
@@ -137,7 +138,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ShortEventDto> getEvents(Long userId, int from, int size) {
         Pageable sortedById = PageRequest.of(from, size, Sort.by("id"));
         List<Event> events = eventRepository.findAllByInitiatorId(userId, sortedById);
@@ -156,9 +156,15 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequests(Long userId, Long eventId) {
         return requestRepository.findAllByEventId(eventId);
+    }
+
+    private List<ParticipationRequestDto> getSavedRequests(List<Request> updatedRequests) {
+        List<Request> saved = requestRepository.saveAll(updatedRequests);
+        return saved.stream()
+                .map(requestMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     private List<Request> getPendingRequests(List<Request> requests) {
@@ -171,7 +177,7 @@ public class EventServiceImpl implements EventService {
         return pendingRequests;
     }
 
-    public void updateEventViewsAndConfirmedRequests(Event event, Long eventId) {
+    private void updateEventViewsAndConfirmedRequests(Event event, Long eventId) {
         List<Request> confirmedRequests = requestRepository.findAllByEventIdAndStatusOrderById(eventId, RequestStatus.CONFIRMED);
         event.setConfirmedRequests(confirmedRequests.size());
         LocalDateTime startDateTime = LocalDateTime.now().minusYears(100).truncatedTo(ChronoUnit.SECONDS);
@@ -197,14 +203,6 @@ public class EventServiceImpl implements EventService {
     private List<Request> rejectRequests(List<Request> pendingRequests) {
         return pendingRequests.stream()
                 .peek(request -> request.setStatus(RequestStatus.REJECTED))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public List<ParticipationRequestDto> getSavedRequests(List<Request> updatedRequests) {
-        List<Request> saved = requestRepository.saveAll(updatedRequests);
-        return saved.stream()
-                .map(requestMapper::toDto)
                 .collect(Collectors.toList());
     }
 

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.admin.categories.CatRepository;
 import ru.practicum.explore.admin.categories.model.Category;
 import ru.practicum.explore.admin.events.dto.AdminStateAction;
+import ru.practicum.explore.admin.events.dto.SearchParams;
 import ru.practicum.explore.admin.events.dto.UpdateEventAdminRequest;
 import ru.practicum.explore.exception.CategoryNotFoundException;
 import ru.practicum.explore.exception.EventNotFoundException;
@@ -25,7 +26,6 @@ import ru.practicum.explore.privateAPI.events.repository.EventRepository;
 import ru.practicum.explore.privateAPI.events.repository.EventSpecification;
 import ru.practicum.explore.privateAPI.mapper.EventMapper;
 
-import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class AdminEventServiceImpl implements AdminEventService {
 
     private final EventRepository eventRepository;
@@ -73,14 +74,10 @@ public class AdminEventServiceImpl implements AdminEventService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<FullEventDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
-                                        LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
-        if (rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
-            throw new InvalidParameterException("Date range is invalid");
-        }
+    public List<FullEventDto> getEvents(SearchParams params, Integer from, Integer size) {
+
         Pageable pageable = PageRequest.of(from, size, Sort.by("id"));
-        Specification<Event> specs = EventSpecification.filterForAdmin(users, states, categories, rangeStart, rangeEnd);
+        Specification<Event> specs = EventSpecification.filterForAdmin(params);
         List<Event> events = eventRepository.findAll(specs, pageable).getContent();
         if (!events.isEmpty()) {
             return events.stream()

@@ -6,11 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.Sort;
 import ru.practicum.explore.admin.categories.model.Category;
 import ru.practicum.explore.admin.compilations.dto.CompilationDto;
+import ru.practicum.explore.exception.InvalidDateRangeException;
 import ru.practicum.explore.privateAPI.events.dto.FullEventDto;
 import ru.practicum.explore.privateAPI.events.dto.ShortEventDto;
+import ru.practicum.explore.publicAPI.dto.SearchEventParams;
+import ru.practicum.explore.publicAPI.dto.Sort;
 import ru.practicum.explore.publicAPI.service.PublicService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -64,7 +66,11 @@ public class PublicController {
                                          @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
                                          @RequestParam(defaultValue = "10") @Positive Integer size,
                                          HttpServletRequest httpServletRequest) {
-        return service.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size,
-                httpServletRequest);
+        if (rangeEnd != null && rangeStart != null && rangeEnd.isBefore(rangeStart)) {
+            throw new InvalidDateRangeException("Date range is invalid");
+        }
+        SearchEventParams params = SearchEventParams.builder().text(text).rangeStart(rangeStart).rangeEnd(rangeEnd)
+                .categories(categories).onlyAvailable(onlyAvailable).sort(sort).paid(paid).build();
+        return service.getEvents(params, from, size, httpServletRequest);
     }
 }

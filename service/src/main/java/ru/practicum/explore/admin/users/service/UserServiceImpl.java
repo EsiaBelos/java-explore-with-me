@@ -19,6 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
@@ -34,7 +35,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<User> getUsers(Integer from, Integer size, List<Long> ids) {
         Pageable sortedById = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id"));
         List<User> users = new ArrayList<>();

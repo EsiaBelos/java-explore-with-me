@@ -28,7 +28,6 @@ public class Event {
     @Column(name = "created")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdOn;
-    @Column(name = "event_date")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
     @Column(name = "published")
@@ -36,16 +35,14 @@ public class Event {
     private LocalDateTime publishedOn;
 
     private Boolean paid; //Нужно ли оплачивать участие
-    @Column(name = "request_moderation")
+
     private Boolean requestModeration; //Нужна ли пре-модерация заявок на участие
 
     @Enumerated(EnumType.STRING)
     private State state;
 
-    @Column(name = "participant_limit")
     private Integer participantLimit; //Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
     private Long views;
-    @Column(name = "confirmed_requests")
     private Integer confirmedRequests;
 
     @ManyToOne
