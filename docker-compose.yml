@@ -31,7 +31,23 @@ services:
     container_name: service_container
     ports:
       - "8080:8080"
+    depends_on:
+      - ewm-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm_main
+      - SPRING_DATASOURCE_USER=explore_with_me
+      - SPRING_DATASOURCE_PASSWORD=explore
+      - STAT_SERVER_URL=http://stats-server:9090
 
 
   ewm-db:
     image: postgres:14-alpine
+    container_name: explore_db_main_container
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_DB=ewm_main
+      - POSTGRES_USER=explore_with_me
+      - POSTGRES_PASSWORD=explore
+      - DB_HOST=ewm-db
+      - DB_PORT=5432
