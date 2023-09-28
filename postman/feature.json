@@ -24,8 +24,7 @@
 							"        pm.collectionVariables.set(\"responseUser\", foundedUser)",
 							"        const subscription = await api.addUser(rnd.getUser());",
 							"        pm.collectionVariables.set(\"subscribeToId\", subscription.id)",
-							"        const foundedSubscription = await api.findUser(subscription.id);",
-							"        pm.collectionVariables.set(\"responseSubscription\", foundedSubscription)",
+							"        pm.collectionVariables.set('response', subscription)",
 							"    } catch(err) {",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);",
 							"    }",
@@ -60,6 +59,7 @@
 							"});",
 							"",
 							"const target = pm.response.json();",
+							"const source = pm.collectionVariables.get('response');",
 							"",
 							"pm.test(\"Пользователь должен содержать поля: id, name, subscriptions\", function () {",
 							"pm.expect(target).to.have.property('id');",
@@ -72,7 +72,7 @@
 							"    pm.expect(target.name).to.be.a(\"string\");",
 							"    pm.expect(target.subscriptions).to.be.an(\"array\");",
 							"",
-							"    pm.expect(target.subscriptions[0].id).equal(pm.collectionVariables.get(\"subscribeToId\"), 'Идентификатор подписки должен быть идентичен идентификаторам, указанным при создании запроса');",
+							"    pm.expect(target.subscriptions[0].id).equal(source.id, 'Идентификатор подписки должен быть идентичен идентификаторам, указанным при создании запроса');",
 							"});"
 						],
 						"type": "text/javascript"
@@ -227,7 +227,7 @@
 							"        const subscription = await api.addUser(rnd.getUser());",
 							"        pm.collectionVariables.set(\"subscribeToId\", subscription.id)",
 							"        const subscrSaved = await api.addSubscription(user.id, subscription.id);",
-							"        pm.collectionVariables.set(\"responseSubscription\", subscrSaved)",
+							"        pm.collectionVariables.set('response', subscrSaved)",
 							"    } catch(err) {",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);",
 							"    }",
@@ -262,6 +262,7 @@
 							"});",
 							"",
 							"const target = pm.response.json();",
+							"const source = pm.collectionVariables.get('response');",
 							"",
 							"pm.test(\"Пользователи должны содержать поля: id, name, email\", function () {",
 							"    pm.expect(target[0]).to.have.property('id');",
@@ -273,7 +274,7 @@
 							"});",
 							"",
 							"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {",
-							"    pm.expect(target[0].id).equal(pm.collectionVariables.get(\"subscribeToId\"));",
+							"    pm.expect(target[0].id).equal(source.subscriptions[0].id);",
 							"});"
 						],
 						"type": "text/javascript"
@@ -804,7 +805,7 @@
 							"        const subscription = await api.addUser(rnd.getUser());",
 							"        pm.collectionVariables.set(\"subscribeToId\", subscription.id)",
 							"        const subscrSaved = await api.addSubscription(user.id, subscription.id);",
-							"        pm.collectionVariables.set(\"responseSubscription\", subscrSaved)",
+							"        pm.collectionVariables.set('response', subscrSaved)",
 							"    } catch(err) {",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);",
 							"    }",
@@ -839,6 +840,7 @@
 							"});",
 							"",
 							"const target = pm.response.json();",
+							"const source = pm.collectionVariables.get('response');",
 							"",
 							"pm.test(\"Пользователи должны содержать поля: id, name, email\", function () {",
 							"    pm.expect(target[0]).to.have.property('id');",
@@ -850,7 +852,7 @@
 							"});",
 							"",
 							"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {",
-							"    pm.expect(target[0].id).equal(pm.collectionVariables.get(\"userId\"));",
+							"    pm.expect(target[0].id).equal(source.id);",
 							"});"
 						],
 						"type": "text/javascript"
