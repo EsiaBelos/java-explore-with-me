@@ -27,7 +27,6 @@ public class EventSpecification {
                         criteriaBuilder.like(criteriaBuilder.upper(root.get(Event_.DESCRIPTION)), search)
                 ));
             }
-            ;
             if (params.getCategories() != null) {
                 Join<Event, Category> join = root.join(Event_.CATEGORY, JoinType.INNER);
                 predicate = criteriaBuilder.and(predicate, join.get("id").in(params.getCategories()));

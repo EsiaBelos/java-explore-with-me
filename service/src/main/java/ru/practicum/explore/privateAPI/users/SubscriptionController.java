@@ -41,8 +41,13 @@ public class SubscriptionController {
         return service.getSubscriptions(userId);
     }
 
+    @GetMapping("/subscribers")
+    public List<UserShortDto> getSubscribers(@PathVariable Long userId) {
+        return service.getSubscribers(userId);
+    }
+
     @GetMapping("/events")
-    public List<ShortEventDto> getEventsBySubscription(@PathVariable Long userId, @RequestParam Boolean onlyAvailable,
+    public List<ShortEventDto> getEventsBySubscription(@PathVariable Long userId, @RequestParam(required = false) Boolean onlyAvailable,
                                                        @RequestParam(required = false) List<Long> categories,
                                                        @RequestParam(required = false) Boolean paid,
                                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
@@ -56,10 +61,5 @@ public class SubscriptionController {
         SearchSubscriptionParams params = SearchSubscriptionParams.builder().rangeStart(rangeStart).rangeEnd(rangeEnd)
                 .categories(categories).onlyAvailable(onlyAvailable).sort(sort).paid(paid).build();
         return service.getEventsBySubscription(userId, params, from, size);
-    }
-
-    @GetMapping("/subscribers")
-    public List<UserShortDto> getSubscribers(@PathVariable Long userId) {
-        return service.getSubscribers(userId);
     }
 }
