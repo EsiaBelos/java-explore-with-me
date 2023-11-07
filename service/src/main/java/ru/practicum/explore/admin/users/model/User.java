@@ -3,6 +3,8 @@ package ru.practicum.explore.admin.users.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -21,6 +23,20 @@ public class User {
     private String name;
 
     private String email;//уникальный
+
+    @OneToMany
+    @JoinTable(name = "subscriptions",
+            joinColumns = @JoinColumn(name = "subscriber_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> subscriptions = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "subscriptions",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "subscriber_id")
+    )
+    private List<User> subscribers = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

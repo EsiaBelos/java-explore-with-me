@@ -106,6 +106,7 @@ public class EventServiceImpl implements EventService {
             if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) { //если для события лимит заявок равен 0 или отключена пре-модерация заявок
                 confirmedRequests.addAll(confirmRequests(pendingRequests));
                 savedConfirmedRequests.addAll(getSavedRequests(confirmedRequests));
+                return new EventRequestStatusUpdateResult(savedConfirmedRequests, savedRejectedRequests);
             }
             long availableToParticipate = event.getParticipantLimit() - event.getConfirmedRequests(); //кол мест для участия
             if (availableToParticipate == 0) {

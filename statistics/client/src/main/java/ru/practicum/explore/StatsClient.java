@@ -24,7 +24,7 @@ public class StatsClient {
     private final String serverUrl;
 
     @Autowired
-    public StatsClient(@Value("${ewm-server.url}") String url) {
+    public StatsClient(@Value("${server.url}") String url) {
         this.rest = builder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(url))
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
